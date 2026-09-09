@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: nilavuart
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:////app/data/nilavuart.db
+      - key: UPLOAD_DIR
+        value: /app/data/uploads

@@ -1,0 +1,114 @@
+"""SQLAlchemy models and DB session setup for NilavuArt."""
+import os
+from datetime import datetime, timezone
+
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    create_engine,
+)
+from sqlalchemy.orm import DeclarativeBase, Session, relationship, sessionmaker
+
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./nilavuart.db")
+
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Artwork(Base):
+    __tablename__ = "artworks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String, index=True, nullable=False, default="demo-user")
+    filename = Column(String, nullable=False)
+    title = Column(String, default="Untitled")
+    exercise_tag = Column(String, nullable=True)  # e.g. "shading", "perspective"
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    feedback = relationship(
+        "Feedback", back_populates="artwork", uselist=False, cascade="all, delete-orphan"
+    )
+    narrative_feedback = relationship(
+        "NarrativeFeedback", back_populates="artwork", uselist=False, cascade="all, delete-orphan"
+    )
+
+
+class Feedback(Base):
+    __tablename__ = "feedback"
+
+    id = Column(Integer, primary_key=True, index=True)
+    artwork_id = Column(Integer, ForeignKey("artworks.id"), nullable=False)
+
+    overall_score = Column(Float, nullable=False)
+    brightness_score = Column(Float, nullable=False)
+    contrast_score = Column(Float, nullable=False)
+    color_balance_score = Column(Float, nullable=False)
+    composition_score = Column(Float, nullable=False)
+    line_quality_score = Column(Float, nullable=False)
+    saturation_score = Column(Float, nullable=False)
+
+    summary = Column(Text, nullable=False)
+    suggestions_json = Column(Text, nullable=False)  # JSON-encoded list[str]
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    artwork = relationship("Artwork", back_populates="feedback")
+
+
+class NarrativeFeedback(Base):
+    __tablename__ = "narrative_feedback"
+
+    id = Column(Integer, primary_key=True, index=True)
+    artwork_id = Column(Integer, ForeignKey("artworks.id"), unique=True, nullable=False)
+    narrative = Column(Text, nullable=False)
+    strengths_json = Column(Text, nullable=False)
+    growth_areas_json = Column(Text, nullable=False)
+    next_steps_json = Column(Text, nullable=False)
+    recommended_exercise = Column(Text, nullable=False)
+    provider = Column(String, nullable=False)
+    model = Column(String, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    artwork = relationship("Artwork", back_populates="narrative_feedback")
+
+
+class Exercise(Base):
+    __tablename__ = "exercises"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tag = Column(String, index=True, nullable=False)  # matches weak-skill tag
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=False)
+    difficulty = Column(String, default="beginner")  # beginner/intermediate/advanced
+
+
+class SiteFeedback(Base):
+    __tablename__ = "site_feedback"
+
+    id = Column(Integer, primary_key=True, index=True)
+    display_name = Column(String(50), nullable=False, default="Anonymous")
+    category = Column(String(30), nullable=False, default="general")
+    rating = Column(Integer, nullable=False)
+    message = Column(Text, nullable=False)
+    status = Column(String(20), nullable=False, default="pending")
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+def init_db() -> None:
+    Base.metadata.create_all(bind=engine)
+
+
+def get_db():
+    db: Session = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
