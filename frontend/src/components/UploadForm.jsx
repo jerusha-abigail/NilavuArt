@@ -3,7 +3,7 @@ import { getLlmStatus, uploadArtwork } from "../api";
 
 export default function UploadForm({ onUploaded }) {
   const [title, setTitle] = useState("");
-  const [authorName, setAuthorName] = useState("Jerusha Arun");
+  const [authorName, setAuthorName] = useState("");
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);

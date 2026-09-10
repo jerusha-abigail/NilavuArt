@@ -1,25 +1,16 @@
-import { useEffect, useState } from "react";
-
-const SAMPLES = [
-  { title: "Between Light and Shadow", image: "/samples/between-light-and-shadow.webp" },
-  { title: "Emerald Gaze", image: "/samples/emerald-gaze.webp" },
-  { title: "Night Bloom", image: "/samples/night-bloom.webp" },
-  { title: "The Art of Listening", image: "/samples/the-art-of-listening.webp" },
-  { title: "Grace in Tradition", image: "/samples/grace-in-tradition.webp" },
-  { title: "Silent Night Reflection", image: "/samples/silent-night-reflection.webp" },
-  { title: "Tender Koala Embrace", image: "/samples/tender-koala-embrace.webp" },
-  { title: "Veil of Thought", image: "/samples/veil-of-thought.webp" },
-  { title: "Four Friends on a Branch", image: "/samples/four-friends-on-a-branch.webp" },
-  { title: "Quiet Strength in Black and White", image: "/samples/quiet-strength-in-black-and-white.webp" },
-];
+import { useEffect, useRef, useState } from "react";
+import { SAMPLE_ARTWORKS } from "../data/sampleArtworks.js";
+import FeedbackCard from "./FeedbackCard.jsx";
 
 export default function SampleGallery() {
   const [selected, setSelected] = useState(null);
+  const closeButtonRef = useRef(null);
 
   useEffect(() => {
     if (!selected) return undefined;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    closeButtonRef.current?.focus();
     const close = (event) => event.key === "Escape" && setSelected(null);
     window.addEventListener("keydown", close, true);
     return () => {
@@ -40,7 +31,7 @@ export default function SampleGallery() {
         </p>
       </div>
       <div className="sample-grid">
-        {SAMPLES.map((sample, index) => (
+        {SAMPLE_ARTWORKS.map((sample, index) => (
           <button
             className={`sample-card sample-card-${(index % 3) + 1}`}
             type="button"
@@ -51,21 +42,26 @@ export default function SampleGallery() {
             <span className="sample-number">{String(index + 1).padStart(2, "0")}</span>
             <span className="sample-info">
               <strong>{sample.title}</strong>
-              <small>Jerusha Arun · Original artwork</small>
+              <small>Jerusha Arun · View sample feedback</small>
             </span>
           </button>
         ))}
       </div>
 
       {selected && (
-        <div className="sample-lightbox" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelected(null)}>
-          <section role="dialog" aria-modal="true" aria-labelledby="sample-title">
-            <button type="button" className="sample-close" aria-label="Close sample artwork" onClick={() => setSelected(null)}>×</button>
-            <img src={selected.image} alt={selected.title} />
-            <div>
-              <span className="section-kicker">Sample artwork</span>
-              <h2 id="sample-title">{selected.title}</h2>
-              <p>Jerusha Arun · Original artwork</p>
+        <div className="artwork-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelected(null)}>
+          <section className="artwork-modal sample-feedback-modal" role="dialog" aria-modal="true" aria-labelledby="sample-title">
+            <button ref={closeButtonRef} type="button" className="artwork-modal-close" aria-label="Close sample feedback" onClick={() => setSelected(null)}>×</button>
+            <div className="artwork-modal-visual">
+              <img src={selected.image} alt={selected.title} />
+              <div>
+                <span className="section-kicker">Sample artwork + feedback</span>
+                <h2 id="sample-title">{selected.title}</h2>
+                <p className="modal-artwork-author">by Jerusha Arun</p>
+              </div>
+            </div>
+            <div className="artwork-modal-feedback">
+              <FeedbackCard feedback={selected.feedback} />
             </div>
           </section>
         </div>
