@@ -24,10 +24,10 @@ export default function SampleGallery() {
       <div className="sample-heading">
         <div>
           <span className="section-kicker">Artist showcase</span>
-          <h2>Sample works by<br /><em>Jerusha Arun.</em></h2>
+          <h2>Explore the<br /><em>sample collection.</em></h2>
         </div>
         <p>
-          Explore finished works from the creator of NilavuArtStudio. These public samples are separate from each user’s private gallery.
+          Open any artwork to preview the detailed visual analysis, personalized critique, and next-step exercises available to artists.
         </p>
       </div>
       <div className="sample-grid">
@@ -42,7 +42,7 @@ export default function SampleGallery() {
             <span className="sample-number">{String(index + 1).padStart(2, "0")}</span>
             <span className="sample-info">
               <strong>{sample.title}</strong>
-              <small>Jerusha Arun · View sample feedback</small>
+              <small>{sample.category} · View sample feedback</small>
             </span>
           </button>
         ))}
@@ -57,7 +57,7 @@ export default function SampleGallery() {
               <div>
                 <span className="section-kicker">Sample artwork + feedback</span>
                 <h2 id="sample-title">{selected.title}</h2>
-                <p className="modal-artwork-author">by Jerusha Arun</p>
+                <p className="modal-artwork-author">{selected.category}</p>
               </div>
             </div>
             <div className="artwork-modal-feedback">

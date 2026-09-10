@@ -28,6 +28,7 @@ const createFeedback = ({
 export const SAMPLE_ARTWORKS = [
   {
     title: "Between Light and Shadow",
+    category: "Nature study",
     image: "/samples/between-light-and-shadow.webp",
     feedback: createFeedback({
       overallScore: 95.5,
@@ -43,6 +44,7 @@ export const SAMPLE_ARTWORKS = [
   },
   {
     title: "Emerald Gaze",
+    category: "Portrait study",
     image: "/samples/emerald-gaze.webp",
     feedback: createFeedback({
       overallScore: 96.7,
@@ -58,6 +60,7 @@ export const SAMPLE_ARTWORKS = [
   },
   {
     title: "Night Bloom",
+    category: "Graphite portrait",
     image: "/samples/night-bloom.webp",
     feedback: createFeedback({
       overallScore: 86.4,
@@ -73,6 +76,7 @@ export const SAMPLE_ARTWORKS = [
   },
   {
     title: "The Art of Listening",
+    category: "Anatomy study",
     image: "/samples/the-art-of-listening.webp",
     feedback: createFeedback({
       overallScore: 96.7,
@@ -88,6 +92,7 @@ export const SAMPLE_ARTWORKS = [
   },
   {
     title: "Grace in Tradition",
+    category: "Cultural portrait",
     image: "/samples/grace-in-tradition.webp",
     feedback: createFeedback({
       overallScore: 95,
@@ -103,6 +108,7 @@ export const SAMPLE_ARTWORKS = [
   },
   {
     title: "Silent Night Reflection",
+    category: "Landscape study",
     image: "/samples/silent-night-reflection.webp",
     feedback: createFeedback({
       overallScore: 76.6,
@@ -118,6 +124,7 @@ export const SAMPLE_ARTWORKS = [
   },
   {
     title: "Tender Koala Embrace",
+    category: "Wildlife study",
     image: "/samples/tender-koala-embrace.webp",
     feedback: createFeedback({
       overallScore: 84.8,
@@ -133,6 +140,7 @@ export const SAMPLE_ARTWORKS = [
   },
   {
     title: "Veil of Thought",
+    category: "Portrait study",
     image: "/samples/veil-of-thought.webp",
     feedback: createFeedback({
       overallScore: 95.7,
@@ -148,6 +156,7 @@ export const SAMPLE_ARTWORKS = [
   },
   {
     title: "Four Friends on a Branch",
+    category: "Nature study",
     image: "/samples/four-friends-on-a-branch.webp",
     feedback: createFeedback({
       overallScore: 89.1,
@@ -163,6 +172,7 @@ export const SAMPLE_ARTWORKS = [
   },
   {
     title: "Quiet Strength in Black and White",
+    category: "Fashion illustration",
     image: "/samples/quiet-strength-in-black-and-white.webp",
     feedback: createFeedback({
       overallScore: 97.2,
