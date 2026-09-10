@@ -256,6 +256,28 @@ def update_artwork_title(
     return _serialize_artwork(artwork)
 
 
+@app.delete("/api/artworks/{artwork_id}")
+def delete_artwork(
+    artwork_id: int,
+    user_id: str = Query(default="demo-user"),
+    db: Session = Depends(get_db),
+):
+    artwork = (
+        db.query(Artwork)
+        .filter(Artwork.id == artwork_id, Artwork.user_id == user_id)
+        .first()
+    )
+    if artwork is None:
+        raise HTTPException(404, "Artwork not found.")
+
+    image_path = Path(UPLOAD_DIR) / artwork.filename
+    db.delete(artwork)
+    db.commit()
+    if image_path.is_file():
+        image_path.unlink()
+    return {"id": artwork_id, "message": "Artwork deleted."}
+
+
 @app.post("/api/artworks/{artwork_id}/narrative")
 async def generate_existing_artwork_narrative(
     artwork_id: int,

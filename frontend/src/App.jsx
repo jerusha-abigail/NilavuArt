@@ -6,6 +6,7 @@ import ProgressChart from "./components/ProgressChart.jsx";
 import ExerciseRecommendations from "./components/ExerciseRecommendations.jsx";
 import SiteFeedback from "./components/SiteFeedback.jsx";
 import {
+  deleteArtwork,
   generateArtworkNarrative,
   getProgress,
   getRecommendedExercises,
@@ -84,6 +85,17 @@ export default function App() {
       artwork.id === artworkId ? { ...artwork, feedback } : artwork
     )));
     return feedback;
+  }
+
+  async function handleArtworkDeleted(artworkId) {
+    await deleteArtwork(artworkId, USER_ID);
+    setArtworks((current) => current.filter((artwork) => artwork.id !== artworkId));
+    setProgress((current) => current.filter((point) => point.artwork_id !== artworkId));
+    if (latestArtwork?.id === artworkId) {
+      setLatestArtwork(null);
+      setLatestFeedback(null);
+      setTitleConfirmation("");
+    }
   }
 
   function navigateTo(event, sectionId) {
@@ -253,6 +265,7 @@ export default function App() {
           <ArtworkGallery
             artworks={artworks}
             onNarrativeRequested={handleNarrativeRequested}
+            onArtworkDeleted={handleArtworkDeleted}
           />
         </section>
 

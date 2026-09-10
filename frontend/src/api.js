@@ -59,6 +59,14 @@ export async function updateArtworkTitle(artworkId, title, userId) {
   return handleResponse(res);
 }
 
+export async function deleteArtwork(artworkId, userId) {
+  const res = await fetch(
+    `${API_BASE}/api/artworks/${artworkId}?user_id=${encodeURIComponent(userId)}`,
+    { method: "DELETE" }
+  );
+  return handleResponse(res);
+}
+
 export async function generateArtworkNarrative(artworkId, artistLevel, userId) {
   const res = await fetch(
     `${API_BASE}/api/artworks/${artworkId}/narrative?user_id=${encodeURIComponent(userId)}`,

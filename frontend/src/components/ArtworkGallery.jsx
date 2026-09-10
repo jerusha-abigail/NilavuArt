@@ -1,13 +1,18 @@
 import { useCallback, useState } from "react";
 import ArtworkDetailModal from "./ArtworkDetailModal.jsx";
 
-export default function ArtworkGallery({ artworks, onNarrativeRequested }) {
+export default function ArtworkGallery({ artworks, onNarrativeRequested, onArtworkDeleted }) {
   const [selectedArtwork, setSelectedArtwork] = useState(null);
   const closeDetails = useCallback(() => setSelectedArtwork(null), []);
 
   async function generateSavedNarrative(artistLevel) {
     const feedback = await onNarrativeRequested(selectedArtwork.id, artistLevel);
     setSelectedArtwork((current) => ({ ...current, feedback }));
+  }
+
+  async function deleteSelectedArtwork() {
+    await onArtworkDeleted(selectedArtwork.id);
+    setSelectedArtwork(null);
   }
 
   if (!artworks.length) {
@@ -45,6 +50,7 @@ export default function ArtworkGallery({ artworks, onNarrativeRequested }) {
           artwork={selectedArtwork}
           onClose={closeDetails}
           onNarrativeRequested={generateSavedNarrative}
+          onDelete={deleteSelectedArtwork}
         />
       )}
     </>

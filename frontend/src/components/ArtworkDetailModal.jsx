@@ -1,12 +1,28 @@
 import { useEffect, useRef } from "react";
+import { useState } from "react";
 import FeedbackCard from "./FeedbackCard.jsx";
 
 export default function ArtworkDetailModal({
   artwork,
   onClose,
   onNarrativeRequested,
+  onDelete,
 }) {
   const closeButtonRef = useRef(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteStatus, setDeleteStatus] = useState("idle");
+  const [deleteError, setDeleteError] = useState("");
+
+  async function handleDelete() {
+    setDeleteStatus("deleting");
+    setDeleteError("");
+    try {
+      await onDelete();
+    } catch (error) {
+      setDeleteStatus("idle");
+      setDeleteError(error.message || "The artwork could not be deleted.");
+    }
+  }
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -58,6 +74,31 @@ export default function ArtworkDetailModal({
             <h2 id="artwork-modal-title">{artwork.title}</h2>
             <p className="modal-artwork-author">by {artwork.author_name || "Anonymous Artist"}</p>
             <p>{new Date(artwork.created_at).toLocaleDateString()}</p>
+            <div className="artwork-delete-actions">
+              {!confirmDelete ? (
+                <button type="button" onClick={() => setConfirmDelete(true)}>
+                  Delete artwork
+                </button>
+              ) : (
+                <div className="delete-confirmation" role="alert">
+                  <span>This permanently removes the artwork and its feedback.</span>
+                  <div>
+                    <button type="button" onClick={() => setConfirmDelete(false)}>
+                      Cancel
+                    </button>
+                    <button
+                      className="confirm-delete-button"
+                      type="button"
+                      disabled={deleteStatus === "deleting"}
+                      onClick={handleDelete}
+                    >
+                      {deleteStatus === "deleting" ? "Deleting…" : "Delete permanently"}
+                    </button>
+                  </div>
+                </div>
+              )}
+              {deleteError && <p className="delete-error">{deleteError}</p>}
+            </div>
           </div>
         </div>
 
