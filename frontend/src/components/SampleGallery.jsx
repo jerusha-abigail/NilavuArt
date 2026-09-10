@@ -23,11 +23,11 @@ export default function SampleGallery() {
     <section className="sample-section" id="samples">
       <div className="sample-heading">
         <div>
-          <span className="section-kicker">Artist showcase</span>
+          <span className="section-kicker">The artist’s creations</span>
           <h2>Explore the<br /><em>sample collection.</em></h2>
         </div>
         <p>
-          Open any artwork to preview the detailed visual analysis, personalized critique, and next-step exercises available to artists.
+          These original creations by the artist demonstrate the detailed visual analysis, personalized critique, and next-step exercises available to every user.
         </p>
       </div>
       <div className="sample-grid">
@@ -57,7 +57,8 @@ export default function SampleGallery() {
               <div>
                 <span className="section-kicker">Sample artwork + feedback</span>
                 <h2 id="sample-title">{selected.title}</h2>
-                <p className="modal-artwork-author">{selected.category}</p>
+                <p className="modal-artwork-author">by Jerusha Arun</p>
+                <p>{selected.category}</p>
               </div>
             </div>
             <div className="artwork-modal-feedback">
