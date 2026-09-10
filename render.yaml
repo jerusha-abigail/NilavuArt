@@ -7,10 +7,24 @@ services:
     autoDeploy: true
     envVars:
       - key: DATABASE_URL
-        value: sqlite:////app/data/nilavuart.db
+        fromDatabase:
+          name: nilavuart-db
+          property: connectionString
       - key: UPLOAD_DIR
         value: /app/data/uploads
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_VISION_MODEL
         value: gpt-4.1-mini
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+databases:
+  - name: nilavuart-db
+    plan: free
+    databaseName: nilavuart
+    user: nilavuart

@@ -17,8 +17,13 @@ from sqlalchemy import (
 from sqlalchemy.orm import DeclarativeBase, Session, relationship, sessionmaker
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./nilavuart.db")
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+engine = create_engine(DATABASE_URL, connect_args=connect_args, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -32,6 +37,8 @@ class Artwork(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String, index=True, nullable=False, default="demo-user")
     filename = Column(String, nullable=False)
+    image_url = Column(Text, nullable=True)
+    storage_public_id = Column(String(255), nullable=True)
     title = Column(String, default="Untitled")
     author_name = Column(String(100), nullable=False, default="Jerusha Arun")
     exercise_tag = Column(String, nullable=True)  # e.g. "shading", "perspective"
@@ -118,6 +125,14 @@ def init_db() -> None:
                 )
                 connection.execute(
                     text("UPDATE artworks SET author_name = 'Jerusha Arun'")
+                )
+        if "image_url" not in artwork_columns:
+            with engine.begin() as connection:
+                connection.execute(text("ALTER TABLE artworks ADD COLUMN image_url TEXT"))
+        if "storage_public_id" not in artwork_columns:
+            with engine.begin() as connection:
+                connection.execute(
+                    text("ALTER TABLE artworks ADD COLUMN storage_public_id VARCHAR(255)")
                 )
     if "narrative_feedback" in inspector.get_table_names():
         columns = {column["name"] for column in inspector.get_columns("narrative_feedback")}

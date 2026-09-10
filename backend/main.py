@@ -5,11 +5,11 @@ from __future__ import annotations
 
 import json
 import os
-import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
+import httpx
 from dotenv import load_dotenv
 
 BACKEND_DIR = Path(__file__).resolve().parent
@@ -21,10 +21,12 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from cv_analysis import analyze_artwork
 from database import (
     Artwork,
+    DATABASE_URL,
     Feedback,
     NarrativeFeedback,
     SessionLocal,
@@ -33,6 +35,7 @@ from database import (
     init_db,
 )
 from exercises import recommend_exercises, seed_exercises
+from image_storage import cloud_storage_configured, delete_image, save_image
 from llm_feedback import LLMFeedbackError, generate_narrative, provider_status
 
 FRONTEND_DIST = BACKEND_DIR.parent / "frontend" / "dist"
@@ -97,6 +100,15 @@ def get_llm_status():
     return provider_status()
 
 
+@app.get("/api/storage/status")
+def get_storage_status():
+    return {
+        "images": "cloudinary" if cloud_storage_configured() else "local",
+        "database": "postgres" if DATABASE_URL.startswith("postgresql") else "sqlite",
+        "durable": cloud_storage_configured() and DATABASE_URL.startswith("postgresql"),
+    }
+
+
 @app.post("/api/site-feedback", status_code=201)
 def submit_site_feedback(payload: SiteFeedbackCreate, db: Session = Depends(get_db)):
     message = payload.message.strip()
@@ -144,13 +156,16 @@ async def upload_artwork(
         raise HTTPException(400, str(exc)) from exc
 
     ext = CONTENT_TYPE_EXTENSIONS[file.content_type]
-    safe_name = f"{uuid.uuid4().hex}{ext}"
-    with open(os.path.join(UPLOAD_DIR, safe_name), "wb") as f:
-        f.write(contents)
+    try:
+        stored_image = await run_in_threadpool(save_image, contents, ext, UPLOAD_DIR)
+    except Exception as exc:
+        raise HTTPException(503, "Artwork storage is temporarily unavailable.") from exc
 
     artwork = Artwork(
         user_id=user_id,
-        filename=safe_name,
+        filename=stored_image.filename,
+        image_url=stored_image.url,
+        storage_public_id=stored_image.public_id,
         title=title,
         author_name=author_name.strip() or "Anonymous Artist",
         exercise_tag=exercise_tag,
@@ -270,11 +285,16 @@ def delete_artwork(
     if artwork is None:
         raise HTTPException(404, "Artwork not found.")
 
-    image_path = Path(UPLOAD_DIR) / artwork.filename
+    filename = artwork.filename
+    storage_public_id = artwork.storage_public_id
     db.delete(artwork)
     db.commit()
-    if image_path.is_file():
-        image_path.unlink()
+    try:
+        delete_image(filename, storage_public_id, UPLOAD_DIR)
+    except Exception as exc:
+        raise HTTPException(
+            502, "Artwork record was deleted, but cloud image cleanup failed."
+        ) from exc
     return {"id": artwork_id, "message": "Artwork deleted."}
 
 
@@ -297,10 +317,19 @@ async def generate_existing_artwork_narrative(
     if artwork.narrative_feedback:
         return _serialize_feedback(artwork.feedback, artwork.narrative_feedback)
 
-    image_path = Path(UPLOAD_DIR) / artwork.filename
-    if not image_path.is_file():
-        raise HTTPException(404, "Artwork image file not found.")
-    contents = image_path.read_bytes()
+    if artwork.image_url:
+        try:
+            async with httpx.AsyncClient(timeout=20) as client:
+                image_response = await client.get(artwork.image_url)
+                image_response.raise_for_status()
+            contents = image_response.content
+        except httpx.HTTPError as exc:
+            raise HTTPException(502, "Stored artwork image is unavailable.") from exc
+    else:
+        image_path = Path(UPLOAD_DIR) / artwork.filename
+        if not image_path.is_file():
+            raise HTTPException(404, "Artwork image file not found.")
+        contents = image_path.read_bytes()
     cv_result = analyze_artwork(contents)
     try:
         critique, provider, model = await generate_narrative(
@@ -393,7 +422,7 @@ def _serialize_artwork(a: Artwork) -> dict:
         "title": a.title,
         "author_name": a.author_name or "Anonymous Artist",
         "exercise_tag": a.exercise_tag,
-        "image_url": f"/uploads/{a.filename}",
+        "image_url": a.image_url or f"/uploads/{a.filename}",
         "created_at": a.created_at.isoformat() if isinstance(a.created_at, datetime) else a.created_at,
     }
 

@@ -91,14 +91,16 @@ frontend and serve it from FastAPI as one website.
 2. Sign in at [render.com](https://render.com) using GitHub.
 3. Select **New + → Blueprint** and choose the repository.
 4. Render detects `render.yaml`; approve the `nilavuart` web service.
-5. In the service's **Environment** settings, optionally add the secret
-  `OPENAI_API_KEY` and the `OPENAI_VISION_MODEL` value.
-6. Wait for the build to finish, then open the generated `onrender.com` URL.
+5. Enter the Cloudinary values requested by the Blueprint:
+   `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
+   `CLOUDINARY_API_SECRET`.
+6. Optionally add the secret `OPENAI_API_KEY` for vision narratives.
+7. Wait for the build to finish, then open the generated `onrender.com` URL.
 
-The free Render filesystem is temporary, so uploaded images and SQLite data
-can disappear after a restart or redeployment. That is acceptable for a demo.
-For permanent user data, add a Render persistent disk mounted at `/app/data`
-(paid) or migrate images to Cloudinary and the database to Render Postgres.
+The Blueprint provisions Render Postgres for artwork records and feedback.
+Cloudinary stores uploaded images, so both survive service restarts and
+redeployments. Local development continues to use SQLite and local uploads
+when no Cloudinary credentials are configured.
 
 The free service may also sleep while inactive, making its first request take
 up to a minute. No API key is required for the current OpenCV analysis.
