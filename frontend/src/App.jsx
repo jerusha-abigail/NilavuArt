@@ -158,14 +158,25 @@ export default function App() {
             <a href="#about" onClick={(event) => navigateTo(event, "about")}>About</a>
             <a href="#blog" onClick={(event) => navigateTo(event, "blog")}>Blog</a>
             <a href="#samples" onClick={(event) => navigateTo(event, "samples")}>Samples</a>
-            <a href="#upload" onClick={(event) => navigateTo(event, "upload")}>Create</a>
+            <a
+              href={authRequired && !session ? "#samples" : "#upload"}
+              onClick={(event) => navigateTo(event, authRequired && !session ? "samples" : "upload")}
+            >
+              {authRequired && !session ? "How it works" : "Create"}
+            </a>
             <a href="#practice" onClick={(event) => navigateTo(event, "practice")}>Practice</a>
             <a href="#progress" onClick={(event) => navigateTo(event, "progress")}>Progress</a>
             <a href="#gallery" onClick={(event) => navigateTo(event, "gallery")}>Gallery</a>
             <a href="#feedback" onClick={(event) => navigateTo(event, "feedback")}>Feedback</a>
           </div>
           <div className="nav-actions">
-            <a className="nav-cta" href="#upload" onClick={(event) => navigateTo(event, "upload")}>Upload art <span>↗</span></a>
+            <a
+              className="nav-cta"
+              href={authRequired && !session ? "#samples" : "#upload"}
+              onClick={(event) => navigateTo(event, authRequired && !session ? "samples" : "upload")}
+            >
+              {authRequired && !session ? "View feedback" : "Upload art"} <span>↗</span>
+            </a>
             {authRequired && (
               session ? (
                 <button className="account-button" type="button" onClick={() => authClient.auth.signOut()}>
@@ -185,7 +196,13 @@ export default function App() {
             <span className="eyebrow">Illuminate Your Creativity</span>
             <h1>ART<br /><em>REIMAGINED</em></h1>
             <p>Turn every creation into your next breakthrough with thoughtful analysis and personalized practice.</p>
-            <a className="hero-cta" href="#upload" onClick={(event) => navigateTo(event, "upload")}><span>Start creating</span><b>↗</b></a>
+            <a
+              className="hero-cta"
+              href={authRequired && !session ? "#samples" : "#upload"}
+              onClick={(event) => navigateTo(event, authRequired && !session ? "samples" : "upload")}
+            >
+              <span>{authRequired && !session ? "Explore sample feedback" : "Start creating"}</span><b>↗</b>
+            </a>
           </div>
 
           <div className="hero-art" aria-label="Featured artwork composition">
