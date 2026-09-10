@@ -56,6 +56,15 @@ class SiteFeedbackCreate(BaseModel):
     message: str = Field(min_length=10, max_length=1200)
     website: str = Field(default="", max_length=0)
 
+
+class ArtworkTitleUpdate(BaseModel):
+    title: str = Field(min_length=1, max_length=100)
+
+
+class ExistingNarrativeRequest(BaseModel):
+    consent: bool
+    artist_level: Literal["beginner", "student", "intermediate", "advanced"] = "student"
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:5173").split(","),
@@ -113,6 +122,7 @@ def submit_site_feedback(payload: SiteFeedbackCreate, db: Session = Depends(get_
 async def upload_artwork(
     user_id: str = Query(default="demo-user"),
     title: str = Query(default="Untitled"),
+    author_name: str = Query(default="Jerusha Arun", max_length=100),
     exercise_tag: str | None = Query(default=None),
     use_llm: bool = Query(default=False),
     artist_level: Literal["beginner", "student", "intermediate", "advanced"] = Query(
@@ -139,7 +149,11 @@ async def upload_artwork(
         f.write(contents)
 
     artwork = Artwork(
-        user_id=user_id, filename=safe_name, title=title, exercise_tag=exercise_tag
+        user_id=user_id,
+        filename=safe_name,
+        title=title,
+        author_name=author_name.strip() or "Anonymous Artist",
+        exercise_tag=exercise_tag,
     )
     db.add(artwork)
     db.commit()
@@ -177,6 +191,7 @@ async def upload_artwork(
                 growth_areas_json=json.dumps(critique.growth_areas),
                 next_steps_json=json.dumps(critique.next_steps),
                 recommended_exercise=critique.recommended_exercise,
+                title_suggestions_json=json.dumps(critique.title_suggestions),
                 provider=provider,
                 model=model,
             )
@@ -218,6 +233,79 @@ def list_artworks(user_id: str = Query(default="demo-user"), db: Session = Depen
     ]
 
 
+@app.patch("/api/artworks/{artwork_id}/title")
+def update_artwork_title(
+    artwork_id: int,
+    payload: ArtworkTitleUpdate,
+    user_id: str = Query(default="demo-user"),
+    db: Session = Depends(get_db),
+):
+    artwork = (
+        db.query(Artwork)
+        .filter(Artwork.id == artwork_id, Artwork.user_id == user_id)
+        .first()
+    )
+    if artwork is None:
+        raise HTTPException(404, "Artwork not found.")
+    title = payload.title.strip()
+    if not title:
+        raise HTTPException(422, "Title cannot be empty.")
+    artwork.title = title
+    db.commit()
+    db.refresh(artwork)
+    return _serialize_artwork(artwork)
+
+
+@app.post("/api/artworks/{artwork_id}/narrative")
+async def generate_existing_artwork_narrative(
+    artwork_id: int,
+    payload: ExistingNarrativeRequest,
+    user_id: str = Query(default="demo-user"),
+    db: Session = Depends(get_db),
+):
+    if not payload.consent:
+        raise HTTPException(400, "Consent is required to send artwork to the vision provider.")
+    artwork = (
+        db.query(Artwork)
+        .filter(Artwork.id == artwork_id, Artwork.user_id == user_id)
+        .first()
+    )
+    if artwork is None:
+        raise HTTPException(404, "Artwork not found.")
+    if artwork.narrative_feedback:
+        return _serialize_feedback(artwork.feedback, artwork.narrative_feedback)
+
+    image_path = Path(UPLOAD_DIR) / artwork.filename
+    if not image_path.is_file():
+        raise HTTPException(404, "Artwork image file not found.")
+    contents = image_path.read_bytes()
+    cv_result = analyze_artwork(contents)
+    try:
+        critique, provider, model = await generate_narrative(
+            contents, cv_result, artist_level=payload.artist_level
+        )
+    except LLMFeedbackError as exc:
+        raise HTTPException(503, exc.code) from exc
+
+    narrative = NarrativeFeedback(
+        artwork_id=artwork.id,
+        narrative=critique.narrative,
+        strengths_json=json.dumps(critique.strengths),
+        growth_areas_json=json.dumps(critique.growth_areas),
+        next_steps_json=json.dumps(critique.next_steps),
+        recommended_exercise=critique.recommended_exercise,
+        title_suggestions_json=json.dumps(critique.title_suggestions),
+        provider=provider,
+        model=model,
+    )
+    db.add(narrative)
+    db.commit()
+    db.refresh(narrative)
+    result = _serialize_feedback(artwork.feedback, narrative)
+    result["narrative_status"] = "complete"
+    return result
+
+
 @app.get("/api/progress")
 def get_progress(user_id: str = Query(default="demo-user"), db: Session = Depends(get_db)):
     """Return a time series of overall + per-metric scores for charting."""
@@ -233,6 +321,7 @@ def get_progress(user_id: str = Query(default="demo-user"), db: Session = Depend
             continue
         points.append(
             {
+                "artwork_id": a.id,
                 "date": a.created_at.isoformat(),
                 "title": a.title,
                 "overall_score": a.feedback.overall_score,
@@ -280,6 +369,7 @@ def _serialize_artwork(a: Artwork) -> dict:
         "id": a.id,
         "user_id": a.user_id,
         "title": a.title,
+        "author_name": a.author_name or "Anonymous Artist",
         "exercise_tag": a.exercise_tag,
         "image_url": f"/uploads/{a.filename}",
         "created_at": a.created_at.isoformat() if isinstance(a.created_at, datetime) else a.created_at,
@@ -310,6 +400,9 @@ def _serialize_feedback(
             "growth_areas": json.loads(narrative_feedback.growth_areas_json),
             "next_steps": json.loads(narrative_feedback.next_steps_json),
             "recommended_exercise": narrative_feedback.recommended_exercise,
+            "title_suggestions": json.loads(narrative_feedback.title_suggestions_json)
+            if narrative_feedback.title_suggestions_json
+            else [],
             "provider": narrative_feedback.provider,
             "model": narrative_feedback.model,
         }

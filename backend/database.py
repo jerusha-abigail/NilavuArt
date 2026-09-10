@@ -11,6 +11,8 @@ from sqlalchemy import (
     String,
     Text,
     create_engine,
+    inspect,
+    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Session, relationship, sessionmaker
 
@@ -31,6 +33,7 @@ class Artwork(Base):
     user_id = Column(String, index=True, nullable=False, default="demo-user")
     filename = Column(String, nullable=False)
     title = Column(String, default="Untitled")
+    author_name = Column(String(100), nullable=False, default="Jerusha Arun")
     exercise_tag = Column(String, nullable=True)  # e.g. "shading", "perspective"
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -73,6 +76,7 @@ class NarrativeFeedback(Base):
     growth_areas_json = Column(Text, nullable=False)
     next_steps_json = Column(Text, nullable=False)
     recommended_exercise = Column(Text, nullable=False)
+    title_suggestions_json = Column(Text, nullable=True)
     provider = Column(String, nullable=False)
     model = Column(String, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -104,6 +108,24 @@ class SiteFeedback(Base):
 
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
+    inspector = inspect(engine)
+    if "artworks" in inspector.get_table_names():
+        artwork_columns = {column["name"] for column in inspector.get_columns("artworks")}
+        if "author_name" not in artwork_columns:
+            with engine.begin() as connection:
+                connection.execute(
+                    text("ALTER TABLE artworks ADD COLUMN author_name VARCHAR(100)")
+                )
+                connection.execute(
+                    text("UPDATE artworks SET author_name = 'Jerusha Arun'")
+                )
+    if "narrative_feedback" in inspector.get_table_names():
+        columns = {column["name"] for column in inspector.get_columns("narrative_feedback")}
+        if "title_suggestions_json" not in columns:
+            with engine.begin() as connection:
+                connection.execute(
+                    text("ALTER TABLE narrative_feedback ADD COLUMN title_suggestions_json TEXT")
+                )
 
 
 def get_db():

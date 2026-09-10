@@ -5,15 +5,26 @@ import ArtworkGallery from "./components/ArtworkGallery.jsx";
 import ProgressChart from "./components/ProgressChart.jsx";
 import ExerciseRecommendations from "./components/ExerciseRecommendations.jsx";
 import SiteFeedback from "./components/SiteFeedback.jsx";
-import { listArtworks, getProgress, getRecommendedExercises } from "./api";
+import {
+  generateArtworkNarrative,
+  getProgress,
+  getRecommendedExercises,
+  listArtworks,
+  updateArtworkTitle,
+} from "./api";
 
 const USER_ID = "demo-user";
+const HERO_ARTWORK_STYLE = {
+  backgroundImage: 'url("/grace-in-tradition.webp")',
+};
 
 export default function App() {
   const [artworks, setArtworks] = useState([]);
   const [progress, setProgress] = useState([]);
   const [exercises, setExercises] = useState([]);
   const [latestFeedback, setLatestFeedback] = useState(null);
+  const [latestArtwork, setLatestArtwork] = useState(null);
+  const [titleConfirmation, setTitleConfirmation] = useState("");
   const [loadError, setLoadError] = useState(null);
 
   const refreshAll = useCallback(async () => {
@@ -36,34 +47,71 @@ export default function App() {
   }, [refreshAll]);
 
   async function handleUploaded(result) {
+    setTitleConfirmation("");
     setLatestFeedback(result.feedback);
+    setLatestArtwork(result.artwork);
     setExercises(result.recommended_exercises);
     await refreshAll();
   }
 
-  const featuredArtwork = artworks.at(-1)?.image_url;
-  const artworkStyle = featuredArtwork
-    ? { backgroundImage: `url(${featuredArtwork})` }
-    : undefined;
+  async function handleTitleSelected(artworkId, title) {
+    const updatedArtwork = await updateArtworkTitle(artworkId, title, USER_ID);
+    setArtworks((current) => current.map((artwork) => (
+      artwork.id === artworkId ? { ...artwork, title: updatedArtwork.title } : artwork
+    )));
+    setProgress((current) => current.map((point) => (
+      point.artwork_id === artworkId
+        ? { ...point, title: updatedArtwork.title }
+        : point
+    )));
+    setLatestArtwork((current) => (
+      current?.id === artworkId ? { ...current, title: updatedArtwork.title } : current
+    ));
+    return updatedArtwork;
+  }
+
+  async function handleUploadTitleSelected(title) {
+    const updatedArtwork = await handleTitleSelected(latestArtwork.id, title);
+    setTitleConfirmation(
+      `Your artwork has been uploaded as “${updatedArtwork.title}”. Its feedback is saved in your gallery.`
+    );
+    return updatedArtwork;
+  }
+
+  async function handleNarrativeRequested(artworkId, artistLevel) {
+    const feedback = await generateArtworkNarrative(artworkId, artistLevel, USER_ID);
+    setArtworks((current) => current.map((artwork) => (
+      artwork.id === artworkId ? { ...artwork, feedback } : artwork
+    )));
+    return feedback;
+  }
+
+  function navigateTo(event, sectionId) {
+    event.preventDefault();
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+    window.history.pushState(null, "", `#${sectionId}`);
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <div className="app">
       <header>
         <nav aria-label="Main navigation">
-          <a className="brand" href="#top" aria-label="NilavuArt home">
+          <a className="brand" href="#top" aria-label="NilavuArt home" onClick={(event) => navigateTo(event, "top")}>
             <span className="brand-mark">N</span>
             <span>NilavuArt</span>
           </a>
           <div className="nav-links">
-            <a href="#about">About</a>
-            <a href="#blog">Blog</a>
-            <a href="#upload">Create</a>
-            <a href="#practice">Practice</a>
-            <a href="#progress">Progress</a>
-            <a href="#gallery">Gallery</a>
-            <a href="#feedback">Feedback</a>
+            <a href="#about" onClick={(event) => navigateTo(event, "about")}>About</a>
+            <a href="#blog" onClick={(event) => navigateTo(event, "blog")}>Blog</a>
+            <a href="#upload" onClick={(event) => navigateTo(event, "upload")}>Create</a>
+            <a href="#practice" onClick={(event) => navigateTo(event, "practice")}>Practice</a>
+            <a href="#progress" onClick={(event) => navigateTo(event, "progress")}>Progress</a>
+            <a href="#gallery" onClick={(event) => navigateTo(event, "gallery")}>Gallery</a>
+            <a href="#feedback" onClick={(event) => navigateTo(event, "feedback")}>Feedback</a>
           </div>
-          <a className="nav-cta" href="#upload">Upload art <span>↗</span></a>
+          <a className="nav-cta" href="#upload" onClick={(event) => navigateTo(event, "upload")}>Upload art <span>↗</span></a>
         </nav>
 
         <div className="hero" id="top">
@@ -71,13 +119,13 @@ export default function App() {
             <span className="eyebrow">Illuminate Your Creativity</span>
             <h1>ART<br /><em>REIMAGINED</em></h1>
             <p>Turn every creation into your next breakthrough with thoughtful analysis and personalized practice.</p>
-            <a className="hero-cta" href="#upload"><span>Start creating</span><b>↗</b></a>
+            <a className="hero-cta" href="#upload" onClick={(event) => navigateTo(event, "upload")}><span>Start creating</span><b>↗</b></a>
           </div>
 
           <div className="hero-art" aria-label="Featured artwork composition">
-            <div className="art-frame art-frame-small" style={artworkStyle}><span>VISION</span></div>
-            <div className="art-frame art-frame-main" style={artworkStyle}><span>CREATE</span></div>
-            <div className="art-frame art-frame-tall" style={artworkStyle}><span>GROW</span></div>
+            <div className="art-frame art-frame-small" style={HERO_ARTWORK_STYLE}><span>VISION</span></div>
+            <div className="art-frame art-frame-main" style={HERO_ARTWORK_STYLE}><span>CREATE</span></div>
+            <div className="art-frame art-frame-tall" style={HERO_ARTWORK_STYLE}><span>GROW</span></div>
             <div className="art-ring" />
           </div>
         </div>
@@ -119,7 +167,7 @@ export default function App() {
             <div className="about-details">
               <span><b>Year</b> Senior</span>
               <span><b>Focus</b> Art + Technology</span>
-              <span><b>Built with</b> React, Python &amp; OpenCV</span>
+              <span><b>Built with</b> React, FastAPI, OpenCV, SQLite &amp; GPT-4.1 mini</span>
               <span><b>Mission</b> Illuminate creativity</span>
             </div>
             <a
@@ -172,7 +220,18 @@ export default function App() {
 
         <section className="upload-section" id="upload">
           <UploadForm userId={USER_ID} onUploaded={handleUploaded} />
-          <FeedbackCard feedback={latestFeedback} />
+          <FeedbackCard
+            feedback={latestFeedback}
+            showTitleSuggestions
+            onTitleSelected={latestArtwork
+              ? handleUploadTitleSelected
+              : undefined}
+          />
+          {titleConfirmation && (
+            <p className="upload-success upload-title-confirmation" role="status">
+              ✓ {titleConfirmation}
+            </p>
+          )}
         </section>
 
         <section id="practice">
@@ -191,7 +250,10 @@ export default function App() {
             </div>
             <span className="artwork-count">{artworks.length} {artworks.length === 1 ? "artwork" : "artworks"}</span>
           </div>
-          <ArtworkGallery artworks={artworks} />
+          <ArtworkGallery
+            artworks={artworks}
+            onNarrativeRequested={handleNarrativeRequested}
+          />
         </section>
 
         <SiteFeedback />

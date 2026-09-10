@@ -3,10 +3,12 @@ import { getLlmStatus, uploadArtwork } from "../api";
 
 export default function UploadForm({ userId, onUploaded }) {
   const [title, setTitle] = useState("");
+  const [authorName, setAuthorName] = useState("Jerusha Arun");
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState("");
   const [useLlm, setUseLlm] = useState(false);
   const [artistLevel, setArtistLevel] = useState("student");
   const [llmStatus, setLlmStatus] = useState({ configured: false, loading: true });
@@ -19,6 +21,7 @@ export default function UploadForm({ userId, onUploaded }) {
 
   function handleFileChange(e) {
     const f = e.target.files?.[0] || null;
+    setSuccess("");
     setFile(f);
     setPreview(f ? URL.createObjectURL(f) : null);
   }
@@ -28,10 +31,12 @@ export default function UploadForm({ userId, onUploaded }) {
     if (!file) return;
     setLoading(true);
     setError(null);
+    setSuccess("");
     try {
       const result = await uploadArtwork({
         userId,
         title: title || "Untitled",
+        authorName: authorName.trim() || "Anonymous Artist",
         useLlm,
         artistLevel,
         file,
@@ -40,6 +45,12 @@ export default function UploadForm({ userId, onUploaded }) {
       setTitle("");
       setFile(null);
       setPreview(null);
+      const hasTitleSuggestions = Boolean(
+        result.feedback?.narrative_feedback?.title_suggestions?.length
+      );
+      if (!hasTitleSuggestions) {
+        setSuccess("Your artwork has been uploaded successfully. Its feedback is saved in your gallery.");
+      }
       e.target.reset();
     } catch (err) {
       setError(err.message);
@@ -57,11 +68,19 @@ export default function UploadForm({ userId, onUploaded }) {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
+      <input
+        type="text"
+        aria-label="Artist name"
+        placeholder="Artist name"
+        value={authorName}
+        maxLength={100}
+        onChange={(e) => setAuthorName(e.target.value)}
+      />
       <input type="file" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange} required />
       {preview && <img className="preview" src={preview} alt="preview" />}
       <div className="ai-options">
         <div className="ai-options-heading">
-          <span>Vision narrative</span>
+          <span>Vision narrative + title ideas</span>
           <span className={`provider-state ${llmStatus.configured ? "ready" : "offline"}`}>
             {llmStatus.loading ? "Checking" : llmStatus.configured ? "Available" : "Not configured"}
           </span>
@@ -73,7 +92,7 @@ export default function UploadForm({ userId, onUploaded }) {
             disabled={!llmStatus.configured}
             onChange={(e) => setUseLlm(e.target.checked)}
           />
-          <span>Include an AI narrative critique</span>
+          <span>Include an AI critique and title recommendations</span>
         </label>
         <p>
           When enabled, a resized copy is sent to the configured vision provider. OpenCV analysis always runs locally.
@@ -94,6 +113,7 @@ export default function UploadForm({ userId, onUploaded }) {
         {loading ? (useLlm ? "Creating your critique…" : "Analyzing…") : "Upload & Get Feedback"}
       </button>
       {error && <p className="error">{error}</p>}
+      {success && <p className="upload-success" role="status">✓ {success}</p>}
     </form>
   );
 }

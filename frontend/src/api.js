@@ -8,10 +8,11 @@ async function handleResponse(res) {
   return res.json();
 }
 
-export async function uploadArtwork({ userId, title, exerciseTag, useLlm, artistLevel, file }) {
+export async function uploadArtwork({ userId, title, authorName, exerciseTag, useLlm, artistLevel, file }) {
   const params = new URLSearchParams({
     user_id: userId,
     title,
+    author_name: authorName,
     use_llm: String(useLlm),
     artist_level: artistLevel,
   });
@@ -43,6 +44,30 @@ export async function submitSiteFeedback(feedback) {
 
 export async function listArtworks(userId) {
   const res = await fetch(`${API_BASE}/api/artworks?user_id=${encodeURIComponent(userId)}`);
+  return handleResponse(res);
+}
+
+export async function updateArtworkTitle(artworkId, title, userId) {
+  const res = await fetch(
+    `${API_BASE}/api/artworks/${artworkId}/title?user_id=${encodeURIComponent(userId)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    }
+  );
+  return handleResponse(res);
+}
+
+export async function generateArtworkNarrative(artworkId, artistLevel, userId) {
+  const res = await fetch(
+    `${API_BASE}/api/artworks/${artworkId}/narrative?user_id=${encodeURIComponent(userId)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ consent: true, artist_level: artistLevel }),
+    }
+  );
   return handleResponse(res);
 }
 

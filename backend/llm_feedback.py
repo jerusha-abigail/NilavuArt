@@ -18,6 +18,7 @@ class NarrativeCritique(BaseModel):
     growth_areas: list[str] = Field(min_length=1, max_length=3)
     next_steps: list[str] = Field(min_length=1, max_length=3)
     recommended_exercise: str = Field(min_length=5, max_length=500)
+    title_suggestions: list[str] = Field(min_length=4, max_length=4)
 
 
 class LLMFeedbackError(RuntimeError):
@@ -60,6 +61,12 @@ def _response_schema() -> dict[str, Any]:
             "growth_areas": string_list,
             "next_steps": string_list,
             "recommended_exercise": {"type": "string"},
+            "title_suggestions": {
+                "type": "array",
+                "items": {"type": "string"},
+                "minItems": 4,
+                "maxItems": 4,
+            },
         },
         "required": [
             "narrative",
@@ -67,6 +74,7 @@ def _response_schema() -> dict[str, Any]:
             "growth_areas",
             "next_steps",
             "recommended_exercise",
+            "title_suggestions",
         ],
         "additionalProperties": False,
     }
@@ -89,7 +97,9 @@ async def generate_narrative(
         f"visual metrics: {metrics}. Treat them as supporting evidence, not artistic truth. "
         "Discuss only the artwork; do not infer identity, health, ethnicity, location, or other "
         "personal traits. Be warm, specific, age-appropriate, and constructive. Cite visible "
-        "details, identify strengths before growth areas, and give achievable next steps."
+        "details, identify strengths before growth areas, and give achievable next steps. "
+        "Also suggest exactly four distinct, original artwork titles, each under 50 characters. "
+        "Base them on visible subject, mood, palette, or composition; do not imitate a living artist."
     )
     payload = {
         "model": model,
