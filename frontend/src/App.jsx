@@ -248,7 +248,8 @@ export default function App() {
             <div className="about-details">
               <span><b>Year</b> Senior</span>
               <span><b>Focus</b> Art + Technology</span>
-              <span><b>Built with</b> React, FastAPI, OpenCV, SQLite &amp; GPT-4.1 mini</span>
+              <span><b>Core stack</b> React, FastAPI, OpenCV &amp; GPT-4.1 mini</span>
+              <span><b>Platform</b> Supabase, PostgreSQL &amp; Cloudinary</span>
               <span><b>Mission</b> Illuminate creativity</span>
             </div>
             <a
@@ -293,7 +294,7 @@ export default function App() {
             <div>
               <h3>Building as a student</h3>
               <p>
-                The project connects a React interface to a Python and FastAPI backend. OpenCV analyzes each uploaded image, SQLite records progress, and the weakest visual areas guide personalized practice exercises.
+                The project connects a React interface to a Python and FastAPI backend. OpenCV analyzes each uploaded image, PostgreSQL records progress, Cloudinary stores artwork securely, and Supabase protects each artist’s private account.
               </p>
             </div>
           </article>
