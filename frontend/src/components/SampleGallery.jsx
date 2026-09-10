@@ -28,6 +28,7 @@ export default function SampleGallery() {
         </div>
         <p>
           These original creations by the artist demonstrate the detailed visual analysis, personalized critique, and next-step exercises available to every user.
+          <strong className="sample-instruction">Select any artwork to open its complete critique.</strong>
         </p>
       </div>
       <div className="sample-grid">
@@ -40,6 +41,7 @@ export default function SampleGallery() {
           >
             <img src={sample.image} alt={sample.title} loading="lazy" />
             <span className="sample-number">{String(index + 1).padStart(2, "0")}</span>
+            <span className="sample-action" aria-hidden="true">Open critique <b>↗</b></span>
             <span className="sample-info">
               <strong>{sample.title}</strong>
               <small>{sample.category}</small>
