@@ -1,4 +1,4 @@
-"""SQLAlchemy models and DB session setup for NilavuArt."""
+"""SQLAlchemy models and DB session setup for NilavuArtStudio."""
 import os
 from datetime import datetime, timezone
 

@@ -1,4 +1,4 @@
-"""NilavuArt backend: upload artwork, get CV-based feedback, track progress,
+"""NilavuArtStudio backend: upload artwork, get CV-based feedback, track progress,
 and receive recommended practice exercises.
 """
 from __future__ import annotations
@@ -49,7 +49,7 @@ CONTENT_TYPE_EXTENSIONS = {
 }
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
-app = FastAPI(title="NilavuArt API", version="1.0.0")
+app = FastAPI(title="NilavuArtStudio API", version="1.0.0")
 
 
 class SiteFeedbackCreate(BaseModel):

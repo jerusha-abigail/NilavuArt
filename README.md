@@ -1,4 +1,4 @@
-# NilavuArt — AI-Powered Art Learning Platform
+# NilavuArtStudio — AI-Powered Art Learning Platform
 
 Upload your artwork, get instant computer-vision-based feedback, track your
 progress over time, and receive practice exercises targeted at your weakest

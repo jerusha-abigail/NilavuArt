@@ -110,9 +110,9 @@ export default function App() {
     <div className="app">
       <header>
         <nav aria-label="Main navigation">
-          <a className="brand" href="#top" aria-label="NilavuArt home" onClick={(event) => navigateTo(event, "top")}>
+          <a className="brand" href="#top" aria-label="NilavuArtStudio home" onClick={(event) => navigateTo(event, "top")}>
             <span className="brand-mark">N</span>
-            <span>NilavuArt</span>
+            <span>NilavuArtStudio</span>
           </a>
           <div className="nav-links">
             <a href="#about" onClick={(event) => navigateTo(event, "about")}>About</a>
@@ -168,10 +168,10 @@ export default function App() {
               I’m a high school senior exploring how technology can help young artists grow with confidence.
             </p>
             <p>
-              I created NilavuArt to bring thoughtful, immediate feedback into the creative process. It combines my interests in visual art, computer vision, and building tools that make learning feel personal.
+              I created NilavuArtStudio to bring thoughtful, immediate feedback into the creative process. It combines my interests in visual art, computer vision, and building tools that make learning feel personal.
             </p>
             <div className="name-story">
-              <span>Why NilavuArt?</span>
+              <span>Why NilavuArtStudio?</span>
               <p>
                 “Nilavu” means moonlight in Tamil. I chose the name because moonlight gently reveals what is already there—just as thoughtful feedback can illuminate an artist’s strengths and help their creativity grow.
               </p>
@@ -218,7 +218,7 @@ export default function App() {
             <div>
               <h3>Making feedback explainable</h3>
               <p>
-                NilavuArt measures visual qualities such as brightness, contrast, color balance, saturation, line density, and composition. Every score comes from a clear image measurement, so artists can understand why a suggestion appeared.
+                NilavuArtStudio measures visual qualities such as brightness, contrast, color balance, saturation, line density, and composition. Every score comes from a clear image measurement, so artists can understand why a suggestion appeared.
               </p>
             </div>
             <div>

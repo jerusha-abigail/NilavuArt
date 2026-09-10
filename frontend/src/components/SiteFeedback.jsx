@@ -46,7 +46,7 @@ export default function SiteFeedback() {
         <span className="section-kicker">Shape what comes next</span>
         <h2>Your voice<br /><em>matters.</em></h2>
         <p>
-          NilavuArt is built for young artists. Share what helped, what felt confusing, or what would make your creative journey better.
+          NilavuArtStudio is built for young artists. Share what helped, what felt confusing, or what would make your creative journey better.
         </p>
         <div className="feedback-privacy">
           <span aria-hidden="true">✦</span>
@@ -57,7 +57,7 @@ export default function SiteFeedback() {
       {status === "complete" ? (
         <div className="feedback-thanks" role="status">
           <span aria-hidden="true">✓</span>
-          <h3>Thank you for helping NilavuArt grow.</h3>
+          <h3>Thank you for helping NilavuArtStudio grow.</h3>
           <p>Your feedback was received and will help guide future improvements.</p>
           <button type="button" onClick={() => setStatus("idle")}>Send another response</button>
         </div>
