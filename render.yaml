@@ -22,6 +22,12 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: AUTH_REQUIRED
+        value: "true"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
 
 databases:
   - name: nilavuart-db

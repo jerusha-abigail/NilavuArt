@@ -1,20 +1,23 @@
 import { useEffect, useState, useCallback } from "react";
+import { createClient } from "@supabase/supabase-js";
 import UploadForm from "./components/UploadForm.jsx";
 import FeedbackCard from "./components/FeedbackCard.jsx";
 import ArtworkGallery from "./components/ArtworkGallery.jsx";
 import ProgressChart from "./components/ProgressChart.jsx";
 import ExerciseRecommendations from "./components/ExerciseRecommendations.jsx";
 import SiteFeedback from "./components/SiteFeedback.jsx";
+import AuthPanel from "./components/AuthPanel.jsx";
 import {
   deleteArtwork,
   generateArtworkNarrative,
+  getAuthConfig,
   getProgress,
   getRecommendedExercises,
   listArtworks,
+  setAccessToken,
   updateArtworkTitle,
 } from "./api";
 
-const USER_ID = "demo-user";
 const HERO_ARTWORK_STYLE = {
   backgroundImage: 'url("/grace-in-tradition.webp")',
 };
@@ -27,13 +30,44 @@ export default function App() {
   const [latestArtwork, setLatestArtwork] = useState(null);
   const [titleConfirmation, setTitleConfirmation] = useState("");
   const [loadError, setLoadError] = useState(null);
+  const [authClient, setAuthClient] = useState(null);
+  const [session, setSession] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [authRequired, setAuthRequired] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+
+  useEffect(() => {
+    let subscription;
+    getAuthConfig()
+      .then(async (config) => {
+        setAuthRequired(config.required);
+        if (!config.enabled) {
+          setAuthReady(true);
+          return;
+        }
+        const client = createClient(config.supabase_url, config.supabase_anon_key);
+        setAuthClient(client);
+        const { data } = await client.auth.getSession();
+        setAccessToken(data.session?.access_token || null);
+        setSession(data.session);
+        const listener = client.auth.onAuthStateChange((_event, nextSession) => {
+          setAccessToken(nextSession?.access_token || null);
+          setSession(nextSession);
+          if (nextSession) setShowAuth(false);
+        });
+        subscription = listener.data.subscription;
+        setAuthReady(true);
+      })
+      .catch(() => setAuthReady(true));
+    return () => subscription?.unsubscribe();
+  }, []);
 
   const refreshAll = useCallback(async () => {
     try {
       const [artworksRes, progressRes, exercisesRes] = await Promise.all([
-        listArtworks(USER_ID),
-        getProgress(USER_ID),
-        getRecommendedExercises(USER_ID),
+        listArtworks(),
+        getProgress(),
+        getRecommendedExercises(),
       ]);
       setArtworks(artworksRes);
       setProgress(progressRes.points);
@@ -44,8 +78,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    refreshAll();
-  }, [refreshAll]);
+    if (authReady && (!authRequired || session)) refreshAll();
+    if (authReady && authRequired && !session) {
+      setArtworks([]);
+      setProgress([]);
+      setExercises([]);
+    }
+  }, [authReady, authRequired, session, refreshAll]);
 
   async function handleUploaded(result) {
     setTitleConfirmation("");
@@ -56,7 +95,7 @@ export default function App() {
   }
 
   async function handleTitleSelected(artworkId, title) {
-    const updatedArtwork = await updateArtworkTitle(artworkId, title, USER_ID);
+    const updatedArtwork = await updateArtworkTitle(artworkId, title);
     setArtworks((current) => current.map((artwork) => (
       artwork.id === artworkId ? { ...artwork, title: updatedArtwork.title } : artwork
     )));
@@ -80,7 +119,7 @@ export default function App() {
   }
 
   async function handleNarrativeRequested(artworkId, artistLevel) {
-    const feedback = await generateArtworkNarrative(artworkId, artistLevel, USER_ID);
+    const feedback = await generateArtworkNarrative(artworkId, artistLevel);
     setArtworks((current) => current.map((artwork) => (
       artwork.id === artworkId ? { ...artwork, feedback } : artwork
     )));
@@ -88,7 +127,7 @@ export default function App() {
   }
 
   async function handleArtworkDeleted(artworkId) {
-    await deleteArtwork(artworkId, USER_ID);
+    await deleteArtwork(artworkId);
     setArtworks((current) => current.filter((artwork) => artwork.id !== artworkId));
     setProgress((current) => current.filter((point) => point.artwork_id !== artworkId));
     if (latestArtwork?.id === artworkId) {
@@ -123,7 +162,20 @@ export default function App() {
             <a href="#gallery" onClick={(event) => navigateTo(event, "gallery")}>Gallery</a>
             <a href="#feedback" onClick={(event) => navigateTo(event, "feedback")}>Feedback</a>
           </div>
-          <a className="nav-cta" href="#upload" onClick={(event) => navigateTo(event, "upload")}>Upload art <span>↗</span></a>
+          <div className="nav-actions">
+            <a className="nav-cta" href="#upload" onClick={(event) => navigateTo(event, "upload")}>Upload art <span>↗</span></a>
+            {authRequired && (
+              session ? (
+                <button className="account-button" type="button" onClick={() => authClient.auth.signOut()}>
+                  Sign out
+                </button>
+              ) : (
+                <button className="account-button" type="button" disabled={!authClient} onClick={() => setShowAuth(true)}>
+                  {authClient ? "Sign in" : "Sign-in setup"}
+                </button>
+              )
+            )}
+          </div>
         </nav>
 
         <div className="hero" id="top">
@@ -231,7 +283,18 @@ export default function App() {
         </section>
 
         <section className="upload-section" id="upload">
-          <UploadForm userId={USER_ID} onUploaded={handleUploaded} />
+          {authRequired && !session ? (
+            <div className="card private-gallery-prompt">
+              <span className="section-kicker">Your private studio</span>
+              <h2>Sign in to upload artwork</h2>
+              <p>Each account gets a private gallery, saved critiques, and personal progress.</p>
+              <button type="button" disabled={!authClient} onClick={() => setShowAuth(true)}>
+                {authClient ? "Sign in or create account" : "Sign-in setup is pending"}
+              </button>
+            </div>
+          ) : (
+            <UploadForm onUploaded={handleUploaded} />
+          )}
           <FeedbackCard
             feedback={latestFeedback}
             showTitleSuggestions
@@ -263,15 +326,27 @@ export default function App() {
             </div>
             <span className="artwork-count">{artworks.length} {artworks.length === 1 ? "artwork" : "artworks"}</span>
           </div>
-          <ArtworkGallery
-            artworks={artworks}
-            onNarrativeRequested={handleNarrativeRequested}
-            onArtworkDeleted={handleArtworkDeleted}
-          />
+          {authRequired && !session ? (
+            <div className="empty private-gallery-empty">
+              <p>Your gallery is private.</p>
+              <button type="button" disabled={!authClient} onClick={() => setShowAuth(true)}>
+                {authClient ? "Sign in to view it" : "Sign-in setup is pending"}
+              </button>
+            </div>
+          ) : (
+            <ArtworkGallery
+              artworks={artworks}
+              onNarrativeRequested={handleNarrativeRequested}
+              onArtworkDeleted={handleArtworkDeleted}
+            />
+          )}
         </section>
 
         <SiteFeedback />
       </main>
+      {showAuth && authClient && (
+        <AuthPanel supabase={authClient} onClose={() => setShowAuth(false)} />
+      )}
     </div>
   );
 }

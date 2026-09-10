@@ -1,4 +1,15 @@
 const API_BASE = "";
+let accessToken = null;
+
+export function setAccessToken(token) {
+  accessToken = token;
+}
+
+function privateHeaders(headers = {}) {
+  return accessToken
+    ? { ...headers, Authorization: `Bearer ${accessToken}` }
+    : headers;
+}
 
 async function handleResponse(res) {
   if (!res.ok) {
@@ -8,9 +19,8 @@ async function handleResponse(res) {
   return res.json();
 }
 
-export async function uploadArtwork({ userId, title, authorName, exerciseTag, useLlm, artistLevel, file }) {
+export async function uploadArtwork({ title, authorName, exerciseTag, useLlm, artistLevel, file }) {
   const params = new URLSearchParams({
-    user_id: userId,
     title,
     author_name: authorName,
     use_llm: String(useLlm),
@@ -23,6 +33,7 @@ export async function uploadArtwork({ userId, title, authorName, exerciseTag, us
 
   const res = await fetch(`${API_BASE}/api/artworks/upload?${params}`, {
     method: "POST",
+    headers: privateHeaders(),
     body: formData,
   });
   return handleResponse(res);
@@ -30,6 +41,11 @@ export async function uploadArtwork({ userId, title, authorName, exerciseTag, us
 
 export async function getLlmStatus() {
   const res = await fetch(`${API_BASE}/api/llm/status`);
+  return handleResponse(res);
+}
+
+export async function getAuthConfig() {
+  const res = await fetch(`${API_BASE}/api/auth/config`);
   return handleResponse(res);
 }
 
@@ -42,51 +58,51 @@ export async function submitSiteFeedback(feedback) {
   return handleResponse(res);
 }
 
-export async function listArtworks(userId) {
-  const res = await fetch(`${API_BASE}/api/artworks?user_id=${encodeURIComponent(userId)}`);
+export async function listArtworks() {
+  const res = await fetch(`${API_BASE}/api/artworks`, { headers: privateHeaders() });
   return handleResponse(res);
 }
 
-export async function updateArtworkTitle(artworkId, title, userId) {
+export async function updateArtworkTitle(artworkId, title) {
   const res = await fetch(
-    `${API_BASE}/api/artworks/${artworkId}/title?user_id=${encodeURIComponent(userId)}`,
+    `${API_BASE}/api/artworks/${artworkId}/title`,
     {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: privateHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ title }),
     }
   );
   return handleResponse(res);
 }
 
-export async function deleteArtwork(artworkId, userId) {
+export async function deleteArtwork(artworkId) {
   const res = await fetch(
-    `${API_BASE}/api/artworks/${artworkId}?user_id=${encodeURIComponent(userId)}`,
-    { method: "DELETE" }
+    `${API_BASE}/api/artworks/${artworkId}`,
+    { method: "DELETE", headers: privateHeaders() }
   );
   return handleResponse(res);
 }
 
-export async function generateArtworkNarrative(artworkId, artistLevel, userId) {
+export async function generateArtworkNarrative(artworkId, artistLevel) {
   const res = await fetch(
-    `${API_BASE}/api/artworks/${artworkId}/narrative?user_id=${encodeURIComponent(userId)}`,
+    `${API_BASE}/api/artworks/${artworkId}/narrative`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: privateHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ consent: true, artist_level: artistLevel }),
     }
   );
   return handleResponse(res);
 }
 
-export async function getProgress(userId) {
-  const res = await fetch(`${API_BASE}/api/progress?user_id=${encodeURIComponent(userId)}`);
+export async function getProgress() {
+  const res = await fetch(`${API_BASE}/api/progress`, { headers: privateHeaders() });
   return handleResponse(res);
 }
 
-export async function getRecommendedExercises(userId) {
-  const res = await fetch(
-    `${API_BASE}/api/exercises/recommended?user_id=${encodeURIComponent(userId)}`
-  );
+export async function getRecommendedExercises() {
+  const res = await fetch(`${API_BASE}/api/exercises/recommended`, {
+    headers: privateHeaders(),
+  });
   return handleResponse(res);
 }

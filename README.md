@@ -102,6 +102,25 @@ Cloudinary stores uploaded images, so both survive service restarts and
 redeployments. Local development continues to use SQLite and local uploads
 when no Cloudinary credentials are configured.
 
+## Private user galleries with Supabase Auth
+
+1. Create a free project at [supabase.com/dashboard](https://supabase.com/dashboard).
+2. In **Authentication → URL Configuration**, set the Site URL to
+  `https://nilavuart.com` and add `http://127.0.0.1:5173` as a local redirect.
+3. Email/password sign-in is available by default. To enable Google, configure
+  it under **Authentication → Providers → Google** using Supabase's callback
+  URL in the Google Cloud console.
+4. Copy the **Project URL** and **Publishable/anon key** from the Supabase API
+  settings. These are public client configuration values, not the service-role
+  secret.
+5. In the Render web service environment, set `SUPABASE_URL`,
+  `SUPABASE_ANON_KEY`, and `AUTH_REQUIRED=true`, then redeploy.
+
+The backend validates every access token with Supabase and derives ownership
+from the authenticated user ID. It never trusts a user ID supplied by the
+browser. The homepage hero remains public, while uploads, galleries, progress,
+title changes, narrative generation, and deletion are private per account.
+
 The free service may also sleep while inactive, making its first request take
 up to a minute. No API key is required for the current OpenCV analysis.
 

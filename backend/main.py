@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
+from auth import get_current_user, public_auth_config
 from cv_analysis import analyze_artwork
 from database import (
     Artwork,
@@ -109,6 +110,11 @@ def get_storage_status():
     }
 
 
+@app.get("/api/auth/config")
+def get_auth_config():
+    return public_auth_config()
+
+
 @app.post("/api/site-feedback", status_code=201)
 def submit_site_feedback(payload: SiteFeedbackCreate, db: Session = Depends(get_db)):
     message = payload.message.strip()
@@ -132,7 +138,6 @@ def submit_site_feedback(payload: SiteFeedbackCreate, db: Session = Depends(get_
 
 @app.post("/api/artworks/upload")
 async def upload_artwork(
-    user_id: str = Query(default="demo-user"),
     title: str = Query(default="Untitled"),
     author_name: str = Query(default="Jerusha Arun", max_length=100),
     exercise_tag: str | None = Query(default=None),
@@ -142,6 +147,7 @@ async def upload_artwork(
     ),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    user_id: str = Depends(get_current_user),
 ):
     if file.content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(400, "Only JPEG, PNG, or WEBP images are supported.")
@@ -230,7 +236,9 @@ async def upload_artwork(
 
 
 @app.get("/api/artworks")
-def list_artworks(user_id: str = Query(default="demo-user"), db: Session = Depends(get_db)):
+def list_artworks(
+    db: Session = Depends(get_db), user_id: str = Depends(get_current_user)
+):
     artworks = (
         db.query(Artwork)
         .filter(Artwork.user_id == user_id)
@@ -252,8 +260,8 @@ def list_artworks(user_id: str = Query(default="demo-user"), db: Session = Depen
 def update_artwork_title(
     artwork_id: int,
     payload: ArtworkTitleUpdate,
-    user_id: str = Query(default="demo-user"),
     db: Session = Depends(get_db),
+    user_id: str = Depends(get_current_user),
 ):
     artwork = (
         db.query(Artwork)
@@ -274,8 +282,8 @@ def update_artwork_title(
 @app.delete("/api/artworks/{artwork_id}")
 def delete_artwork(
     artwork_id: int,
-    user_id: str = Query(default="demo-user"),
     db: Session = Depends(get_db),
+    user_id: str = Depends(get_current_user),
 ):
     artwork = (
         db.query(Artwork)
@@ -302,8 +310,8 @@ def delete_artwork(
 async def generate_existing_artwork_narrative(
     artwork_id: int,
     payload: ExistingNarrativeRequest,
-    user_id: str = Query(default="demo-user"),
     db: Session = Depends(get_db),
+    user_id: str = Depends(get_current_user),
 ):
     if not payload.consent:
         raise HTTPException(400, "Consent is required to send artwork to the vision provider.")
@@ -358,7 +366,9 @@ async def generate_existing_artwork_narrative(
 
 
 @app.get("/api/progress")
-def get_progress(user_id: str = Query(default="demo-user"), db: Session = Depends(get_db)):
+def get_progress(
+    db: Session = Depends(get_db), user_id: str = Depends(get_current_user)
+):
     """Return a time series of overall + per-metric scores for charting."""
     artworks = (
         db.query(Artwork)
@@ -389,7 +399,7 @@ def get_progress(user_id: str = Query(default="demo-user"), db: Session = Depend
 
 @app.get("/api/exercises/recommended")
 def get_recommended_exercises(
-    user_id: str = Query(default="demo-user"), db: Session = Depends(get_db)
+    db: Session = Depends(get_db), user_id: str = Depends(get_current_user)
 ):
     """Recommend exercises based on the artist's most recent weak metrics."""
     latest = (

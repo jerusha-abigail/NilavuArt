@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getLlmStatus, uploadArtwork } from "../api";
 
-export default function UploadForm({ userId, onUploaded }) {
+export default function UploadForm({ onUploaded }) {
   const [title, setTitle] = useState("");
   const [authorName, setAuthorName] = useState("Jerusha Arun");
   const [file, setFile] = useState(null);
@@ -34,7 +34,6 @@ export default function UploadForm({ userId, onUploaded }) {
     setSuccess("");
     try {
       const result = await uploadArtwork({
-        userId,
         title: title || "Untitled",
         authorName: authorName.trim() || "Anonymous Artist",
         useLlm,
