@@ -327,6 +327,19 @@ export default function App() {
 
         <SampleGallery />
 
+        <section className="artist-testimonial" aria-labelledby="artist-testimonial-heading">
+          <div className="testimonial-label">
+            <span className="section-kicker">From a young artist</span>
+            <span>Jenna · Age 11</span>
+          </div>
+          <blockquote>
+            <span aria-hidden="true">“</span>
+            <p id="artist-testimonial-heading">
+              I really like using Nilavu Art Studio because it helps me become a better artist. My favorite part is getting feedback on my drawings. I think it would be cool if there were drawing challenges, badges, and a way to see my progress over time. 🎨😊
+            </p>
+          </blockquote>
+        </section>
+
         <section className="upload-section" id="upload">
           {authRequired && !session ? (
             <div className="card private-gallery-prompt">

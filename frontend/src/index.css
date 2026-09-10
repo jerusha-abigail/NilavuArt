@@ -538,6 +538,13 @@ section { scroll-margin-top: 24px; }
 .sample-info strong { font: 400 1.05rem Georgia, serif; }
 .sample-info small { color: var(--gold); font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase; }
 
+.artist-testimonial { display: grid; grid-template-columns: 0.38fr 1.62fr; border: 1px solid rgba(198, 166, 91, 0.28); background: linear-gradient(115deg, #15120d, #080808 55%); }
+.testimonial-label { display: flex; flex-direction: column; justify-content: space-between; gap: 40px; padding: clamp(28px, 4vw, 46px); border-right: 1px solid var(--line); }
+.testimonial-label > span:last-child { color: var(--muted); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.artist-testimonial blockquote { position: relative; margin: 0; padding: clamp(38px, 6vw, 72px); }
+.artist-testimonial blockquote > span { position: absolute; top: 20px; left: 30px; color: rgba(227, 200, 117, 0.22); font: 400 7rem/1 Georgia, serif; }
+.artist-testimonial p { position: relative; max-width: 890px; margin: 0; color: #e6e0d4; font: 400 clamp(1.35rem, 2.5vw, 2.25rem)/1.45 Georgia, serif; }
+
 .upload-section {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -941,6 +948,8 @@ section { scroll-margin-top: 24px; }
   .sample-heading { grid-template-columns: 1fr; gap: 22px; }
   .sample-card { grid-column: span 6; }
   .sample-card-2 { margin-top: 0; }
+  .artist-testimonial { grid-template-columns: 1fr; }
+  .testimonial-label { flex-direction: row; border-right: 0; border-bottom: 1px solid var(--line); }
   .critique-columns { grid-template-columns: 1fr; }
   .visitor-feedback { grid-template-columns: 1fr; }
   .feedback-intro { border-right: 0; border-bottom: 1px solid rgba(198, 166, 91, 0.24); }
@@ -976,6 +985,9 @@ section { scroll-margin-top: 24px; }
   .sample-section { padding: 32px 16px; }
   .sample-card { grid-column: 1 / -1; }
   .sample-card img { height: 350px; }
+  .testimonial-label { align-items: flex-start; flex-direction: column; gap: 12px; padding: 24px 22px; }
+  .artist-testimonial blockquote { padding: 42px 22px 30px; }
+  .artist-testimonial blockquote > span { top: 8px; left: 17px; }
   .feedback-intro, .feedback-form, .feedback-thanks { padding: 30px 22px; }
   .feedback-form-row { grid-template-columns: 1fr; }
   .artwork-modal-visual { min-height: 360px; }
