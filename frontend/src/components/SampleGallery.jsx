@@ -42,7 +42,7 @@ export default function SampleGallery() {
             <span className="sample-number">{String(index + 1).padStart(2, "0")}</span>
             <span className="sample-info">
               <strong>{sample.title}</strong>
-              <small>{sample.category} · View sample feedback</small>
+              <small>{sample.category}</small>
             </span>
           </button>
         ))}

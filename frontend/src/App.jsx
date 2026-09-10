@@ -159,8 +159,8 @@ export default function App() {
             <a href="#blog" onClick={(event) => navigateTo(event, "blog")}>Blog</a>
             <a href="#samples" onClick={(event) => navigateTo(event, "samples")}>Samples</a>
             <a
-              href={authRequired && !session ? "#samples" : "#upload"}
-              onClick={(event) => navigateTo(event, authRequired && !session ? "samples" : "upload")}
+              href={authRequired && !session ? "#how-it-works" : "#upload"}
+              onClick={(event) => navigateTo(event, authRequired && !session ? "how-it-works" : "upload")}
             >
               {authRequired && !session ? "How it works" : "Create"}
             </a>
@@ -170,13 +170,11 @@ export default function App() {
             <a href="#feedback" onClick={(event) => navigateTo(event, "feedback")}>Feedback</a>
           </div>
           <div className="nav-actions">
-            <a
-              className="nav-cta"
-              href={authRequired && !session ? "#samples" : "#upload"}
-              onClick={(event) => navigateTo(event, authRequired && !session ? "samples" : "upload")}
-            >
-              {authRequired && !session ? "View feedback" : "Upload art"} <span>↗</span>
-            </a>
+            {(!authRequired || session) && (
+              <a className="nav-cta" href="#upload" onClick={(event) => navigateTo(event, "upload")}>
+                Upload art <span>↗</span>
+              </a>
+            )}
             {authRequired && (
               session ? (
                 <button className="account-button" type="button" onClick={() => authClient.auth.signOut()}>
@@ -299,6 +297,31 @@ export default function App() {
               </p>
             </div>
           </article>
+        </section>
+
+        <section className="how-it-works" id="how-it-works">
+          <div className="how-it-works-heading">
+            <span className="section-kicker">How it works</span>
+            <h2>From artwork to<br /><em>your next step.</em></h2>
+            <p>Create an account to keep every upload, critique, and progress update private to you.</p>
+          </div>
+          <ol className="how-it-works-steps">
+            <li>
+              <span>01</span>
+              <h3>Upload privately</h3>
+              <p>Add a photo of your artwork to your personal studio. It is visible only in your account.</p>
+            </li>
+            <li>
+              <span>02</span>
+              <h3>Understand the image</h3>
+              <p>Computer vision measures composition, contrast, color balance, brightness, and line quality.</p>
+            </li>
+            <li>
+              <span>03</span>
+              <h3>Keep growing</h3>
+              <p>Receive an encouraging critique, practical next steps, and exercises tailored to the artwork.</p>
+            </li>
+          </ol>
         </section>
 
         <SampleGallery />
