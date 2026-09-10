@@ -24,6 +24,7 @@ export default function FeedbackCard({
   onTitleSelected,
   onNarrativeRequested,
   showTitleSuggestions = false,
+  titleSuggestionKey,
 }) {
   if (!feedback) return null;
   const {
@@ -70,6 +71,7 @@ export default function FeedbackCard({
           <p className="narrative-copy">{narrative.narrative}</p>
           {showTitleSuggestions && narrative.title_suggestions?.length > 0 && (
             <TitleSuggestions
+              key={titleSuggestionKey}
               titles={narrative.title_suggestions}
               onTitleSelected={onTitleSelected}
             />

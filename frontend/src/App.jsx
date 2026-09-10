@@ -235,6 +235,7 @@ export default function App() {
           <FeedbackCard
             feedback={latestFeedback}
             showTitleSuggestions
+            titleSuggestionKey={latestArtwork?.id}
             onTitleSelected={latestArtwork
               ? handleUploadTitleSelected
               : undefined}
