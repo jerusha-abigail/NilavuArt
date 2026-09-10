@@ -7,6 +7,7 @@ import ProgressChart from "./components/ProgressChart.jsx";
 import ExerciseRecommendations from "./components/ExerciseRecommendations.jsx";
 import SiteFeedback from "./components/SiteFeedback.jsx";
 import AuthPanel from "./components/AuthPanel.jsx";
+import SampleGallery from "./components/SampleGallery.jsx";
 import {
   deleteArtwork,
   generateArtworkNarrative,
@@ -156,6 +157,7 @@ export default function App() {
           <div className="nav-links">
             <a href="#about" onClick={(event) => navigateTo(event, "about")}>About</a>
             <a href="#blog" onClick={(event) => navigateTo(event, "blog")}>Blog</a>
+            <a href="#samples" onClick={(event) => navigateTo(event, "samples")}>Samples</a>
             <a href="#upload" onClick={(event) => navigateTo(event, "upload")}>Create</a>
             <a href="#practice" onClick={(event) => navigateTo(event, "practice")}>Practice</a>
             <a href="#progress" onClick={(event) => navigateTo(event, "progress")}>Progress</a>
@@ -282,6 +284,8 @@ export default function App() {
           </article>
         </section>
 
+        <SampleGallery />
+
         <section className="upload-section" id="upload">
           {authRequired && !session ? (
             <div className="card private-gallery-prompt">
@@ -322,7 +326,7 @@ export default function App() {
           <div className="section-heading">
             <div>
               <span className="section-kicker">Creative journey</span>
-              <h2>Your Gallery</h2>
+              <h2>Your Private Gallery</h2>
             </div>
             <span className="artwork-count">{artworks.length} {artworks.length === 1 ? "artwork" : "artworks"}</span>
           </div>

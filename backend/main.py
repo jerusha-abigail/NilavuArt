@@ -487,5 +487,14 @@ if FRONTEND_DIST.is_dir():
     def serve_frontend(path: str):
         requested_file = (FRONTEND_DIST / path).resolve()
         if requested_file.is_relative_to(FRONTEND_DIST) and requested_file.is_file():
-            return FileResponse(requested_file)
+            media_types = {
+                ".avif": "image/avif",
+                ".gif": "image/gif",
+                ".jpeg": "image/jpeg",
+                ".jpg": "image/jpeg",
+                ".png": "image/png",
+                ".svg": "image/svg+xml",
+                ".webp": "image/webp",
+            }
+            return FileResponse(requested_file, media_type=media_types.get(requested_file.suffix.lower()))
         return FileResponse(FRONTEND_DIST / "index.html")
