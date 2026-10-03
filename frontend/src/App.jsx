@@ -340,6 +340,19 @@ export default function App() {
           </blockquote>
         </section>
 
+        <section className="artist-testimonial" aria-labelledby="community-testimonial-heading">
+          <div className="testimonial-label">
+            <span className="section-kicker">From our community</span>
+            <span>Joanna Jeldo</span>
+          </div>
+          <blockquote>
+            <span aria-hidden="true">“</span>
+            <p id="community-testimonial-heading">
+              Beautiful drawings! My favourite drawing of yours is Tender Koala.
+            </p>
+          </blockquote>
+        </section>
+
         <section className="upload-section" id="upload">
           {authRequired && !session ? (
             <div className="card private-gallery-prompt">
